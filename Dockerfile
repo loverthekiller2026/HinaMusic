@@ -15,6 +15,9 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+# heroku3 is imported by the legacy platform helper and requires six.
+# Install six explicitly in the Railway Docker image.
+RUN pip install --no-cache-dir six
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
