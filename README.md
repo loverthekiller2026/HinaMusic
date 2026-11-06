@@ -1,92 +1,42 @@
-# 🎵 AloneMusic
+# 🎵 HinaMusic
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy?repo=https://github.com/loverthekiller2026/HinaMusic)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
-[![Stars](https://img.shields.io/github/stars/TheAloneTeam/AloneMusic?style=social)](https://github.com/TheAloneTeam/AloneMusic/stargazers)
-[![Forks](https://img.shields.io/github/forks/TheAloneTeam/AloneMusic?style=social)](https://github.com/TheAloneTeam/AloneMusic/network/members)
 
----
+## Railway deployment
 
+1. Click the **Deploy on Railway** button above, or create a new Railway project and choose **Deploy from GitHub repo**.
+2. Select `loverthekiller2026/HinaMusic`. Railway will build the included `Dockerfile`.
+3. Add the environment variables below in the Railway service's **Variables** tab.
+4. Deploy and inspect the deployment logs.
 
-## 🚀 Introduction
-**AloneMusic** is a Python-based **music bot/service** that allows users to play, pause, skip, and manage playlists with ease.  
-It’s designed to be lightweight, fast, and customizable.  
+### Required environment variables
 
----
+| Variable | Description |
+| --- | --- |
+| `API_ID` | Telegram API ID |
+| `API_HASH` | Telegram API hash |
+| `BOT_TOKEN` | Bot token from BotFather |
+| `OWNER_ID` | Telegram numeric owner ID |
+| `LOGGER_ID` | Numeric ID of the log group/channel |
+| `MONGO_DB_URI` | MongoDB connection URI |
+| `STRING_SESSION` | Assistant/user account Pyrogram session |
 
-## ✨ Features
-- 🎶 Play / Pause / Skip / Stop songs  
-- 📂 Playlist management (add/remove/list)  
-- 🔗 Play via song name or URL  
-- ⚡ Fast and smooth performance  
-- ⚙️ Easy configuration with `.env` file  
-- 🐳 Docker & Heroku deployment support  
+Optional assistant sessions can be supplied as `STRING_SESSION2` through `STRING_SESSION5`.
 
----
-## ❤️ Support
+**Important:** The bot requires at least one assistant session. Add the assistant account to the target voice-chat group and make sure the configured log group/channel has an active voice chat, as required by the current startup code. Keep all tokens, session strings, and database credentials private; enter them only as Railway variables, never commit them to Git.
 
-💬 **Telegram:** [AloneMusic](https://t.me/TheTeamHacker)  
+### Runtime
 
-🆘 **Any Problem? DM:** [𝚨Łꪮⲛ𝛆 🚩𝗧ε᧘‌ᴍ](https://t.me/codeshivu)
+Railway uses the repository's Dockerfile (Python 3.11, FFmpeg and required system libraries). The bot runs with:
 
-📂 **GitHub Issues:** [Report a Problem](https://github.com/TheAloneTeam/AloneMusic/issues/new)
+```bash
+python -m AloneMusic
+```
 
----
+The Railway config restarts the service after an unexpected failure. This does not guarantee uninterrupted playback if Telegram, the host, or external media providers are unavailable.
 
-## 📜 License
+## Project
 
-🧾 This project is licensed under the **GNU GPLv3 License** — see the [LICENSE](/LICENSE) file for details.
-
----
-
-## 🚀 Deployment Methods
-
-### 🔹 1. Deploy on **Heroku** (One Click)
-Click this button to deploy instantly on **Heroku**:
-
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Yewsdhi/QUEENAMUSICAOTUPLAY)
-
-
-- **Update System and Install Dependencies**:  
-  ```bash
-  sudo apt update && sudo apt upgrade -y && sudo apt install -y ffmpeg git python3-pip tmux nano
-  ```
-
-- **Install uv for Efficient Dependency Management**:
-  ```bash
-  pip install uv
-  ```
-- **Clone the Repository:**  
-  ```bash
-  git clone https://github.com/TheAloneTeam/AloneMusic cd AloneMusic
-  ```
-  
-- **Create and Activate a Virtual Environment:**
-  - You can create and activate the virtual Environment before cloning the repo.
-  ```bash
-  uv venv .venv && source .venv/bin/activate
-  ```
-
-- Install Python Requirements:  
-  ```bash
-  uv pip install -e .
-  ```
-
-- Copy and Edit Environment Variables:  
-  ```bash
-  cp sample.env .env && nano .env
-  ```
-  After editing, press `Ctrl+X`, then `Y`, and press **Enter** to save the changes.
-
-- Start a tmux Session to Keep the Bot Running:  
-  ```bash
-  tmux
-  ```
-
-- Run the Bot:  
-  ```bash
-  python3 -m AloneMusic
-  ```
-
-- Detach from the **tmux** Session (Bot keeps running):  
-  Press `Ctrl+b`, then `d`
+HinaMusic is based on the AloneMusic Telegram voice-chat music bot codebase. See the source tree and license for details.
