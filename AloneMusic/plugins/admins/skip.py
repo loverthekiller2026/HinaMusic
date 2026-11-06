@@ -42,15 +42,19 @@ async def skip(cli, message: Message, _, chat_id):
                 if count > 2:
                     count = int(count - 1)
                     if 1 <= state <= count:
+                        active_player_mystic = check[0].get("mystic") if check else None
                         for x in range(state):
                             popped = None
                             try:
-                                old_mystic = check[0].get("mystic") if check else None
                                 popped = check.pop(0)
                             except:
                                 return await message.reply_text(_["admin_12"])
                             if popped:
-                                await auto_clean(popped)
+                                # Preserve the current player UI while removing the skipped track.
+                                if x == 0:
+                                    await auto_clean({**popped, "mystic": None})
+                                else:
+                                    await auto_clean(popped)
                             if not check:
                                 if await is_autoplay_on(chat_id):
                                     try:
@@ -66,7 +70,7 @@ async def skip(cli, message: Message, _, chat_id):
                                         from AloneMusic.utils.stream.stream import stream
                                         await stream(
                                             _,
-                                            old_mystic,
+                                            active_player_mystic,
                                             popped["user_id"],
                                             details,
                                             chat_id,
@@ -103,10 +107,11 @@ async def skip(cli, message: Message, _, chat_id):
         check = db.get(chat_id)
         popped = None
         try:
-            old_mystic = check[0].get("mystic") if check else None
+            active_player_mystic = check[0].get("mystic") if check else None
             popped = check.pop(0)
             if popped:
-                await auto_clean(popped)
+                # Keep the current player UI so it can be edited for the next song.
+                await auto_clean({**popped, "mystic": None})
             if not check:
                 if await is_autoplay_on(chat_id):
                     try:
@@ -122,7 +127,7 @@ async def skip(cli, message: Message, _, chat_id):
                         from AloneMusic.utils.stream.stream import stream
                         await stream(
                             _,
-                            old_mystic,
+                            active_player_mystic,
                             popped["user_id"],
                             details,
                             chat_id,
@@ -178,7 +183,8 @@ async def skip(cli, message: Message, _, chat_id):
         db[chat_id][0]["seconds"] = check[0]["old_second"]
         db[chat_id][0]["speed_path"] = None
         db[chat_id][0]["speed"] = 1.0
-    old_mystic = db.get(chat_id, [{}])[0].get("mystic")
+    # Reuse the player message captured before removing the active queue item.
+    old_mystic = active_player_mystic
     if "live_" in queued:
         n, link = await YouTube.video(videoid, True)
         if n == 0:
@@ -201,7 +207,7 @@ async def skip(cli, message: Message, _, chat_id):
             check[0]["dur"],
             user,
         )
-        run = await update_stream_ui(chat_id, message.chat.id, None, img, caption, button)
+        run = await update_stream_ui(chat_id, message.chat.id, old_mystic, img, caption, button)
         db[chat_id][0]["mystic"] = run
         db[chat_id][0]["markup"] = "tg"
     elif "vid_" in queued:
@@ -238,7 +244,7 @@ async def skip(cli, message: Message, _, chat_id):
             check[0]["dur"],
             user,
         )
-        run = await update_stream_ui(chat_id, message.chat.id, None, img, caption, button)
+        run = await update_stream_ui(chat_id, message.chat.id, old_mystic, img, caption, button)
         db[chat_id][0]["mystic"] = run
         db[chat_id][0]["markup"] = "stream"
     elif "index_" in queued:
@@ -250,7 +256,7 @@ async def skip(cli, message: Message, _, chat_id):
             _, chat_id, await is_autoplay_on(chat_id), await is_thumb_on(chat_id), await get_filter(chat_id)
         )
         caption = _["stream_2"].format(user)
-        run = await update_stream_ui(chat_id, message.chat.id, None, config.STREAM_IMG_URL, caption, button)
+        run = await update_stream_ui(chat_id, message.chat.id, old_mystic, config.STREAM_IMG_URL, caption, button)
         db[chat_id][0]["mystic"] = run
         db[chat_id][0]["markup"] = "tg"
     else:
@@ -275,7 +281,7 @@ async def skip(cli, message: Message, _, chat_id):
             caption = _["stream_1"].format(
                 config.SUPPORT_CHAT, title[:23], check[0]["dur"], user
             )
-            run = await update_stream_ui(chat_id, message.chat.id, None, img, caption, button)
+            run = await update_stream_ui(chat_id, message.chat.id, old_mystic, img, caption, button)
             db[chat_id][0]["mystic"] = run
             db[chat_id][0]["markup"] = "tg"
         elif videoid == "soundcloud":
@@ -285,7 +291,7 @@ async def skip(cli, message: Message, _, chat_id):
             caption = _["stream_1"].format(
                 config.SUPPORT_CHAT, title[:23], check[0]["dur"], user
             )
-            run = await update_stream_ui(chat_id, message.chat.id, None, config.SOUNCLOUD_IMG_URL, caption, button)
+            run = await update_stream_ui(chat_id, message.chat.id, old_mystic, config.SOUNCLOUD_IMG_URL, caption, button)
             db[chat_id][0]["mystic"] = run
             db[chat_id][0]["markup"] = "tg"
         else:
@@ -299,6 +305,6 @@ async def skip(cli, message: Message, _, chat_id):
                 check[0]["dur"],
                 user,
             )
-            run = await update_stream_ui(chat_id, message.chat.id, None, img, caption, button)
+            run = await update_stream_ui(chat_id, message.chat.id, old_mystic, img, caption, button)
             db[chat_id][0]["mystic"] = run
             db[chat_id][0]["markup"] = "stream"
