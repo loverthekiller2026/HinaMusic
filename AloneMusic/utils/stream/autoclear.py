@@ -14,16 +14,23 @@ from config import autoclean
 
 async def auto_clean(popped):
     try:
-        rem = popped["file"]
-        autoclean.remove(rem)
-        count = autoclean.count(rem)
-        if count == 0:
-            if "vid_" not in rem or "live_" not in rem or "index_" not in rem:
+        rem = popped.get("file")
+        if isinstance(rem, str) and rem:
+            try:
+                autoclean.remove(rem)
+            except ValueError:
+                pass
+
+            if autoclean.count(rem) == 0 and not any(
+                marker in rem for marker in ("vid_", "live_", "index_")
+            ):
                 try:
                     os.remove(rem)
-                except:
+                except FileNotFoundError:
                     pass
-    except:
+                except OSError:
+                    pass
+    except Exception:
         pass
     try:
         mystic = popped.get("mystic")
