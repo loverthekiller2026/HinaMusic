@@ -223,10 +223,8 @@ async def skip(cli, message: Message, _, chat_id):
             # A queued YouTube item may have a stale/missing cached file.
             # Retry once without the old Telegram player message before handing
             # the path to PyTgCalls (which raises FileNotFoundError otherwise).
-            if not direct and (
-                not isinstance(file_path, str)
-                or not os.path.isfile(file_path)
-                or os.path.getsize(file_path) == 0
+            if isinstance(file_path, str) and not file_path.startswith(("http://", "https://")) and (
+                not os.path.isfile(file_path) or os.path.getsize(file_path) == 0
             ):
                 file_path, direct = await YouTube.download(
                     videoid,
@@ -234,10 +232,8 @@ async def skip(cli, message: Message, _, chat_id):
                     videoid=True,
                     video=status,
                 )
-            if not direct and (
-                not isinstance(file_path, str)
-                or not os.path.isfile(file_path)
-                or os.path.getsize(file_path) == 0
+            if isinstance(file_path, str) and not file_path.startswith(("http://", "https://")) and (
+                not os.path.isfile(file_path) or os.path.getsize(file_path) == 0
             ):
                 raise FileNotFoundError(
                     f"Downloaded track is missing or empty: {file_path}"
