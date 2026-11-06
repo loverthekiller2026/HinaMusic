@@ -223,12 +223,15 @@ async def skip(cli, message: Message, _, chat_id):
             # A queued YouTube item may have a stale/missing cached file.
             # Retry once without the old Telegram player message before handing
             # the path to PyTgCalls (which raises FileNotFoundError otherwise).
+            # PyTgCalls validates local media paths here. A direct HTTP
+            # YouTube URL is not a valid replacement for a downloaded file.
             def _usable_source(source):
-                if not isinstance(source, str) or not source.strip():
-                    return False
-                if source.startswith(("http://", "https://")):
-                    return True
-                return os.path.isfile(source) and os.path.getsize(source) > 0
+                return (
+                    isinstance(source, str)
+                    and bool(source.strip())
+                    and os.path.isfile(source)
+                    and os.path.getsize(source) > 0
+                )
 
             if not _usable_source(file_path):
                 file_path, direct = await YouTube.download(
@@ -238,14 +241,9 @@ async def skip(cli, message: Message, _, chat_id):
                     video=status,
                 )
 
-            # If the audio download API did not return a real file, try a
-            # short-lived direct audio URL. Video playback still requires a file.
-            if not _usable_source(file_path) and not status:
-                file_path = await YouTube.stream_url(videoid, videoid=True)
-
             if not _usable_source(file_path):
                 raise FileNotFoundError(
-                    f"No playable source returned for YouTube video {videoid}"
+                    f"Downloaded media file is missing or empty for video {videoid}"
                 )
         except Exception:
             if old_mystic:
