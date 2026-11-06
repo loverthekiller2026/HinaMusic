@@ -35,52 +35,39 @@ async def update_stream_ui(
     caption,
     button,
 ):
-    if await is_thumb_on(chat_id):
-        if mystic:
+    """Keep one text-only player message and edit it for every track."""
+    markup = InlineKeyboardMarkup(button)
+
+    # Telegram cannot convert a photo message into a text message by editing.
+    # Convert the old photo player once; all later tracks reuse the text message.
+    if mystic:
+        if getattr(mystic, "photo", None):
             try:
-                # If it's already a photo message, edit it
-                return await mystic.edit_media(
-                    media=InputMediaPhoto(img, caption=caption),
-                    reply_markup=InlineKeyboardMarkup(button),
-                )
+                await mystic.delete()
             except Exception:
+                pass
+            mystic = None
+        else:
+            try:
+                await mystic.edit_text(
+                    text=caption,
+                    reply_markup=markup,
+                    disable_web_page_preview=True,
+                )
+                return mystic
+            except Exception:
+                # The previous player may have been deleted or become uneditable.
                 try:
                     await mystic.delete()
-                except:
-                    pass
-        return await app.send_photo(
-            original_chat_id,
-            photo=img,
-            has_spoiler=True,
-            caption=caption,
-            reply_markup=InlineKeyboardMarkup(button),
-        )
-    else:
-        if mystic:
-            try:
-                # If it's a text message, edit it
-                return await mystic.edit_text(
-                    text=caption,
-                    reply_markup=InlineKeyboardMarkup(button),
-                )
-            except Exception:
-                # If it was a photo message or edit failed, try to edit caption if photo
-                try:
-                    await mystic.edit_caption(
-                        caption=caption,
-                        reply_markup=InlineKeyboardMarkup(button),
-                    )
-                    return mystic
                 except Exception:
-                    try:
-                        await mystic.delete()
-                    except:
-                        pass
-        return await app.send_message(
-            original_chat_id,
-            text=caption,
-            reply_markup=InlineKeyboardMarkup(button),
-        )
+                    pass
+
+    return await app.send_message(
+        original_chat_id,
+        text=caption,
+        reply_markup=markup,
+        disable_web_page_preview=True,
+    )
 
 
 async def update_queue_ui(
