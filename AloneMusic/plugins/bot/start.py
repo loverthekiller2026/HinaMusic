@@ -30,7 +30,49 @@ from AloneMusic.utils.inline import help_pannel, private_panel, start_panel
 from config import BANNED_USERS
 from strings import get_string
 
-EFFECT_ID = [
+
+
+_START_PHOTO_CACHE = None
+
+
+def _download_start_photo(url):
+    request = Request(
+        url,
+        headers={"User-Agent": "Mozilla/5.0 (compatible; HinaMusic/1.0)"},
+    )
+    with urlopen(request, timeout=20) as response:
+        image = response.read(10 * 1024 * 1024 + 1)
+        if len(image) > 10 * 1024 * 1024:
+            raise ValueError("Start image is larger than 10 MB")
+        if not image.startswith((b"\\xff\\xd8\\xff", b"\\x89PNG\\r\\n\\x1a\\n", b"GIF8", b"RIFF")):
+            raise ValueError("START_IMG_URL did not return a valid image")
+        return image
+
+
+async def send_start_photo(message, caption, reply_markup, **kwargs):
+    """Send the configured start image as an upload, with a text fallback."""
+    global _START_PHOTO_CACHE
+    try:
+        if _START_PHOTO_CACHE is None:
+            _START_PHOTO_CACHE = await asyncio.to_thread(
+                _download_start_photo, config.START_IMG_URL
+            )
+        photo = BytesIO(_START_PHOTO_CACHE)
+        photo.name = "hinamusic-start.jpg"
+        await message.reply_photo(
+            photo=photo,
+            caption=caption,
+            reply_markup=reply_markup,
+            **kwargs,
+        )
+    except Exception as exc:
+        print(f"[START] Photo send failed; using text fallback: {exc}")
+        await message.reply_text(
+            caption,
+            reply_markup=reply_markup,
+            disable_web_page_preview=True,
+        )
+\n\nEFFECT_ID = [
     5046509860389126442,
     5107584321108051014,
     5104841245755180586,
@@ -47,11 +89,11 @@ async def start_pm(client, message: Message, _):
         name = message.text.split(None, 1)[1]
         if name[0:4] == "help":
             keyboard = help_pannel(_)
-            return await message.reply_photo(
-                photo=config.START_IMG_URL,
-                has_spoiler=True,
+            return await send_start_photo(
+                message,
                 caption=_["help_1"].format(config.SUPPORT_CHAT),
                 reply_markup=keyboard,
+                has_spoiler=True,
             )
         if name[0:3] == "sud":
             await sudoers_list(client=client, message=message, _=_)
@@ -101,12 +143,12 @@ async def start_pm(client, message: Message, _):
                 )
     else:
         out = private_panel(_)
-        await message.reply_photo(
-            photo=config.START_IMG_URL,
-            has_spoiler=True,
-            message_effect_id=random.choice(EFFECT_ID),
+        await send_start_photo(
+            message,
             caption=_["start_2"].format(message.from_user.mention, app.mention),
             reply_markup=InlineKeyboardMarkup(out),
+            has_spoiler=True,
+            message_effect_id=random.choice(EFFECT_ID),
         )
         if await is_on_off(2):
             return await app.send_message(
@@ -120,11 +162,11 @@ async def start_pm(client, message: Message, _):
 async def start_gp(client, message: Message, _):
     out = start_panel(_)
     uptime = int(time.time() - _boot_)
-    await message.reply_photo(
-        photo=config.START_IMG_URL,
-        has_spoiler=True,
+    await send_start_photo(
+        message,
         caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
         reply_markup=InlineKeyboardMarkup(out),
+        has_spoiler=True,
     )
     return await add_served_chat(message.chat.id)
 
@@ -156,9 +198,8 @@ async def welcome(client, message: Message):
                     return await app.leave_chat(message.chat.id)
 
                 out = start_panel(_)
-                await message.reply_photo(
-                    photo=config.START_IMG_URL,
-                    has_spoiler=True,
+                await send_start_photo(
+                    message,
                     caption=_["start_3"].format(
                         message.from_user.first_name,
                         app.mention,
@@ -166,6 +207,7 @@ async def welcome(client, message: Message):
                         app.mention,
                     ),
                     reply_markup=InlineKeyboardMarkup(out),
+                    has_spoiler=True,
                 )
                 await add_served_chat(message.chat.id)
                 userbot = await get_assistant(message.chat.id)
