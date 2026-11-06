@@ -8,6 +8,8 @@
 # All rights reserved.
 
 import os
+import shutil
+import uuid
 
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup, Message
@@ -23,7 +25,7 @@ from AloneMusic.utils.inline import close_markup, stream_markup
 from AloneMusic.utils.stream.autoclear import auto_clean
 from AloneMusic.utils.stream.stream import update_stream_ui
 from AloneMusic.utils.thumbnails import get_thumb
-from config import BANNED_USERS
+from config import BANNED_USERS, autoclean
 
 
 @app.on_message(
@@ -245,6 +247,24 @@ async def skip(cli, message: Message, _, chat_id):
                 raise FileNotFoundError(
                     f"Downloaded media file is missing or empty for video {videoid}"
                 )
+
+            # Give this queued playback its own absolute path. The downloader
+            # uses a shared downloads/<video_id> file, which can be removed by
+            # queue cleanup or reused by another skip/download operation.
+            source_path = os.path.abspath(file_path)
+            extension = ".mp4" if status else ".mp3"
+            os.makedirs("downloads", exist_ok=True)
+            playback_path = os.path.abspath(
+                os.path.join(
+                    "downloads",
+                    f"skip_{chat_id}_{videoid}_{uuid.uuid4().hex}{extension}",
+                )
+            )
+            shutil.copy2(source_path, playback_path)
+            if not _usable_source(playback_path):
+                raise FileNotFoundError(
+                    f"Skip playback copy is missing or empty: {playback_path}"
+                )
         except Exception:
             if old_mystic:
                 return await old_mystic.edit_text(_["call_6"])
@@ -255,8 +275,25 @@ async def skip(cli, message: Message, _, chat_id):
         except:
             image = None
         try:
-            await Alone.skip_stream(chat_id, file_path, title, video=status, image=image)
-        except:
+            # Re-check immediately before PyTgCalls opens the media file.
+            if not _usable_source(playback_path):
+                raise FileNotFoundError(
+                    f"Skip playback file disappeared before play: {playback_path}"
+                )
+            await Alone.skip_stream(chat_id, playback_path, title, video=status, image=image)
+            # Track the unique playback copy so normal queue cleanup removes it.
+            try:
+                autoclean.remove(queued)
+            except ValueError:
+                pass
+            autoclean.append(playback_path)
+            db[chat_id][0]["file"] = playback_path
+        except Exception as exc:
+            print(
+                f"[SKIP] YouTube playback failed: chat={chat_id}, "
+                f"video={videoid}, source={locals().get('file_path')!r}, "
+                f"playback={locals().get('playback_path')!r}, error={exc!r}"
+            )
             if old_mystic:
                 return await old_mystic.edit_text(_["call_6"])
             else:
