@@ -289,10 +289,16 @@ async def skip(cli, message: Message, _, chat_id):
             autoclean.append(playback_path)
             db[chat_id][0]["file"] = playback_path
         except Exception as exc:
+            failed_path = locals().get("playback_path")
+            if failed_path and os.path.isfile(failed_path):
+                try:
+                    os.remove(failed_path)
+                except OSError:
+                    pass
             print(
                 f"[SKIP] YouTube playback failed: chat={chat_id}, "
                 f"video={videoid}, source={locals().get('file_path')!r}, "
-                f"playback={locals().get('playback_path')!r}, error={exc!r}"
+                f"playback={failed_path!r}, error={exc!r}"
             )
             if old_mystic:
                 return await old_mystic.edit_text(_["call_6"])
