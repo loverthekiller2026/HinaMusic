@@ -9,6 +9,8 @@
 import asyncio
 import random
 import time
+from io import BytesIO
+from urllib.request import Request, urlopen
 
 from py_yt import VideosSearch
 from pyrogram import filters
@@ -44,7 +46,7 @@ def _download_start_photo(url):
         image = response.read(10 * 1024 * 1024 + 1)
         if len(image) > 10 * 1024 * 1024:
             raise ValueError("Start image is larger than 10 MB")
-        if not image.startswith((b"\\xff\\xd8\\xff", b"\\x89PNG\\r\\n\\x1a\\n", b"GIF8", b"RIFF")):
+        if not image.startswith((b"\xff\xd8\xff", b"\x89PNG\r\n\x1a\n", b"GIF8", b"RIFF")):
             raise ValueError("START_IMG_URL did not return a valid image")
         return image
 
@@ -72,7 +74,9 @@ async def send_start_photo(message, caption, reply_markup, **kwargs):
             reply_markup=reply_markup,
             disable_web_page_preview=True,
         )
-\n\nEFFECT_ID = [
+
+
+EFFECT_ID = [
     5046509860389126442,
     5107584321108051014,
     5104841245755180586,
