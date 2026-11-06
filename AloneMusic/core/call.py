@@ -461,7 +461,8 @@ class Call(PyTgCalls):
                 await set_loop(chat_id, loop)
 
             if popped:
-                await auto_clean(popped)
+                # Keep the active player message for the next track; clean only track resources.
+                await auto_clean({**popped, "mystic": None})
 
             if not check:
                 if await is_autoplay_on(chat_id):
