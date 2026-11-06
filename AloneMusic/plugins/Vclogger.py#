@@ -18,7 +18,7 @@ from strings import get_string
 LOGGER = getLogger(__name__)
 
 # ================= CONFIG =================
-LOG_CHANNEL_ID = -1003924375118 # 👈 apna log channel ID yahan daalo
+LOG_CHANNEL_ID =  # 👈 apna log channel ID yahan daalo
 
 # ================= GLOBALS =================
 vc_active_users: Dict[int, Set[int]] = {}
