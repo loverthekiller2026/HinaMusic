@@ -7,6 +7,8 @@
 #
 # All rights reserved.
 
+import os
+
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup, Message
 
@@ -218,7 +220,29 @@ async def skip(cli, message: Message, _, chat_id):
                 videoid=True,
                 video=status,
             )
-        except:
+            # A queued YouTube item may have a stale/missing cached file.
+            # Retry once without the old Telegram player message before handing
+            # the path to PyTgCalls (which raises FileNotFoundError otherwise).
+            if not direct and (
+                not isinstance(file_path, str)
+                or not os.path.isfile(file_path)
+                or os.path.getsize(file_path) == 0
+            ):
+                file_path, direct = await YouTube.download(
+                    videoid,
+                    None,
+                    videoid=True,
+                    video=status,
+                )
+            if not direct and (
+                not isinstance(file_path, str)
+                or not os.path.isfile(file_path)
+                or os.path.getsize(file_path) == 0
+            ):
+                raise FileNotFoundError(
+                    f"Downloaded track is missing or empty: {file_path}"
+                )
+        except Exception:
             if old_mystic:
                 return await old_mystic.edit_text(_["call_6"])
             else:
