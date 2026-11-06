@@ -616,7 +616,7 @@ class Call(PyTgCalls):
                 check[0]["dur"],
                 user,
             )
-            run = await update_stream_ui(chat_id, original_chat_id, None, img, caption, button)
+            run = await update_stream_ui(chat_id, original_chat_id, old_mystic, img, caption, button)
             if chat_id in db and db[chat_id]:
                 db[chat_id][0]["mystic"] = run
                 db[chat_id][0]["markup"] = "tg"
@@ -659,7 +659,7 @@ class Call(PyTgCalls):
                 check[0]["dur"],
                 user,
             )
-            run = await update_stream_ui(chat_id, original_chat_id, None, img, caption, button)
+            run = await update_stream_ui(chat_id, original_chat_id, old_mystic, img, caption, button)
             if chat_id in db and db[chat_id]:
                 db[chat_id][0]["mystic"] = run
                 db[chat_id][0]["markup"] = "stream"
@@ -678,7 +678,7 @@ class Call(PyTgCalls):
                 _, chat_id, await is_autoplay_on(chat_id), await is_thumb_on(chat_id), await get_filter(chat_id)
             )
             caption=_["stream_2"].format(user)
-            run = await update_stream_ui(chat_id, original_chat_id, None, config.STREAM_IMG_URL, caption, button)
+            run = await update_stream_ui(chat_id, original_chat_id, old_mystic, config.STREAM_IMG_URL, caption, button)
             if chat_id in db and db[chat_id]:
                 db[chat_id][0]["mystic"] = run
                 db[chat_id][0]["markup"] = "tg"
@@ -700,7 +700,7 @@ class Call(PyTgCalls):
                 caption=_["stream_1"].format(
                     config.SUPPORT_CHAT, title[:23], check[0]["dur"], user
                 )
-                run = await update_stream_ui(chat_id, original_chat_id, None, img, caption, button)
+                run = await update_stream_ui(chat_id, original_chat_id, old_mystic, img, caption, button)
                 if chat_id in db and db[chat_id]:
                     db[chat_id][0]["mystic"] = run
                     db[chat_id][0]["markup"] = "tg"
@@ -712,7 +712,7 @@ class Call(PyTgCalls):
                 caption=_["stream_1"].format(
                     config.SUPPORT_CHAT, title[:23], check[0]["dur"], user
                 )
-                run = await update_stream_ui(chat_id, original_chat_id, None, config.SOUNCLOUD_IMG_URL, caption, button)
+                run = await update_stream_ui(chat_id, original_chat_id, old_mystic, config.SOUNCLOUD_IMG_URL, caption, button)
                 if chat_id in db and db[chat_id]:
                     db[chat_id][0]["mystic"] = run
                     db[chat_id][0]["markup"] = "tg"
@@ -728,7 +728,7 @@ class Call(PyTgCalls):
                     check[0]["dur"],
                     user,
                 )
-                run = await update_stream_ui(chat_id, original_chat_id, None, img, caption, button)
+                run = await update_stream_ui(chat_id, original_chat_id, old_mystic, img, caption, button)
                 if chat_id in db and db[chat_id]:
                     db[chat_id][0]["mystic"] = run
                     db[chat_id][0]["markup"] = "stream"
